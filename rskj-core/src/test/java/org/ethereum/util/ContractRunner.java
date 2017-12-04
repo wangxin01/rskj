@@ -7,6 +7,7 @@ import co.rsk.test.builders.TransactionBuilder;
 import org.ethereum.core.*;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.db.EventsStore;
 import org.ethereum.db.ReceiptStore;
 import org.ethereum.rpc.TypeConverter;
 import org.ethereum.vm.program.ProgramResult;
@@ -22,6 +23,7 @@ public class ContractRunner {
     private final BlockChainImpl blockchain;
     private final BlockStore blockStore;
     private final ReceiptStore receiptStore;
+    private final EventsStore eventsStore;
 
     public final Account sender;
 
@@ -30,18 +32,21 @@ public class ContractRunner {
     }
 
     public ContractRunner(RskTestFactory factory) {
-        this(factory.getRepository(), factory.getBlockchain(), factory.getBlockStore(), factory.getReceiptStore());
+        this(factory.getRepository(), factory.getBlockchain(), factory.getBlockStore(),
+                factory.getReceiptStore(),
+                factory.getEventsStore());
     }
 
     private ContractRunner(Repository repository,
                            BlockChainImpl blockchain,
                            BlockStore blockStore,
-                           ReceiptStore receiptStore) {
+                           ReceiptStore receiptStore,
+                           EventsStore eventsStore) {
         this.blockchain = blockchain;
         this.repository = repository;
         this.blockStore = blockStore;
         this.receiptStore = receiptStore;
-
+        this.eventsStore =eventsStore;
         // we build a new block with high gas limit because Genesis' is too low
         Block block = new BlockBuilder(blockchain)
                 .gasLimit(BigInteger.valueOf(10_000_000))
@@ -104,6 +109,7 @@ public class ContractRunner {
         Repository track = repository.startTracking();
         TransactionExecutor executor = new TransactionExecutor(transaction, new byte[32],
                 repository, blockStore, receiptStore,
+                eventsStore,
                 new ProgramInvokeFactoryImpl(), blockchain.getBestBlock());
         executor.init();
         executor.execute();

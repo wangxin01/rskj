@@ -10,10 +10,7 @@ import org.ethereum.core.Genesis;
 import org.ethereum.core.PendingState;
 import org.ethereum.core.Repository;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.BlockStore;
-import org.ethereum.db.IndexedBlockStore;
-import org.ethereum.db.ReceiptStore;
-import org.ethereum.db.ReceiptStoreImpl;
+import org.ethereum.db.*;
 
 import java.util.HashMap;
 
