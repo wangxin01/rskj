@@ -162,13 +162,14 @@ public class DefaultConfig {
     public BlockParentDependantValidationRule blockParentDependantValidationRule() {
         Repository repository = appCtx.getBean(Repository.class);
         BlockTxsValidationRule blockTxsValidationRule = new BlockTxsValidationRule(repository);
+        BlockTxsFieldsValidationRule blockTxsFieldsValidationRule = new BlockTxsFieldsValidationRule();
         PrevMinGasPriceRule prevMinGasPriceRule = new PrevMinGasPriceRule();
         BlockParentNumberRule parentNumberRule = new BlockParentNumberRule();
         BlockDifficultyRule difficultyRule = new BlockDifficultyRule();
         BlockParentGasLimitRule parentGasLimitRule = new BlockParentGasLimitRule(RskSystemProperties.CONFIG.getBlockchainConfig().
                 getCommonConstants().getGasLimitBoundDivisor());
 
-        return new BlockParentCompositeRule(blockTxsValidationRule, prevMinGasPriceRule, parentNumberRule, difficultyRule, parentGasLimitRule);
+        return new BlockParentCompositeRule(blockTxsFieldsValidationRule,blockTxsValidationRule, prevMinGasPriceRule, parentNumberRule, difficultyRule, parentGasLimitRule);
     }
 
     @Bean(name = "blockValidationRule")
