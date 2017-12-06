@@ -83,7 +83,7 @@ public class BlockHeader implements SerializableObject {
     private BigInteger paidFees;
 
     /* An arbitrary byte array containing data relevant to this block.
-    * With the exception of the genesis block, this must be 32 bytes or fewer */
+     * With the exception of the genesis block, this must be 32 bytes or fewer */
     private byte[] extraData;
 
     /* The 81-byte bitcoin block header for merged mining */
@@ -108,16 +108,19 @@ public class BlockHeader implements SerializableObject {
         this.unclesHash = rlpHeader.get(1).getRLPData();
         this.coinbase = rlpHeader.get(2).getRLPData();
         this.stateRoot = rlpHeader.get(3).getRLPData();
-        if (this.stateRoot == null)
+        if (this.stateRoot == null) {
             this.stateRoot = EMPTY_TRIE_HASH;
+        }
 
         this.txTrieRoot = rlpHeader.get(4).getRLPData();
-        if (this.txTrieRoot == null)
+        if (this.txTrieRoot == null) {
             this.txTrieRoot = EMPTY_TRIE_HASH;
+        }
 
         this.receiptTrieRoot = rlpHeader.get(5).getRLPData();
-        if (this.receiptTrieRoot == null)
+        if (this.receiptTrieRoot == null) {
             this.receiptTrieRoot = EMPTY_TRIE_HASH;
+        }
 
         this.logsBloom = rlpHeader.get(6).getRLPData();
         this.difficulty = rlpHeader.get(7).getRLPData();
@@ -127,23 +130,23 @@ public class BlockHeader implements SerializableObject {
         byte[] guBytes = rlpHeader.get(10).getRLPData();
         byte[] tsBytes = rlpHeader.get(11).getRLPData();
 
-        this.number = parseLong(nrBytes);
+        this.number = parseBigInteger(nrBytes).longValueExact();
 
         this.gasLimit = glBytes;
-        this.gasUsed = parseLong(guBytes);
-        this.timestamp = parseLong(tsBytes);
+        this.gasUsed = parseBigInteger(guBytes).longValueExact();
+        this.timestamp = parseBigInteger(tsBytes).longValueExact();
 
         this.extraData = rlpHeader.get(12).getRLPData();
 
         byte[] pfBytes = rlpHeader.get(13).getRLPData();
-        this.paidFees = pfBytes==null? BigInteger.ZERO:BigIntegers.fromUnsignedByteArray(pfBytes);
+        this.paidFees = parseBigInteger(pfBytes);
         this.minimumGasPrice = rlpHeader.get(14).getRLPData();
 
         int r = 15;
 
         if ((rlpHeader.size() == 19) || (rlpHeader.size() == 16)) {
             byte[] ucBytes = rlpHeader.get(r++).getRLPData();
-            this.uncleCount = parseInt(ucBytes);
+            this.uncleCount = parseBigInteger(ucBytes).intValueExact();
         }
 
         if (rlpHeader.size() > r) {
@@ -156,41 +159,14 @@ public class BlockHeader implements SerializableObject {
         this.sealed = sealed;
     }
 
-    private long parseLong(byte[] nrBytes) {
-
-        if (nrBytes == null) return 0;
-        BigInteger b = BigIntegers.fromUnsignedByteArray(nrBytes);
-        return b.longValueExact();
-    }
-
-    private int parseInt(byte[] nrBytes) {
-
-        if (nrBytes == null) return 0;
-        BigInteger b = BigIntegers.fromUnsignedByteArray(nrBytes);
-        return b.intValueExact();
-    }
-
     public BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
                        byte[] logsBloom, byte[] difficulty, long number,
                        byte[] gasLimit, long gasUsed, long timestamp,
                        byte[] extraData,
                        byte[] minimumGasPrice,
                        int uncleCount) {
-        this.parentHash = parentHash;
-        this.unclesHash = unclesHash;
-        this.coinbase = coinbase;
-        this.logsBloom = logsBloom;
-        this.difficulty = difficulty;
-        this.number = number;
-        this.gasLimit = gasLimit;
-        this.gasUsed = gasUsed;
-        this.timestamp = timestamp;
-        this.extraData = extraData;
-        this.stateRoot = ByteUtils.clone(EMPTY_TRIE_HASH);
-        this.minimumGasPrice = minimumGasPrice;
-        this.receiptTrieRoot = ByteUtils.clone(EMPTY_TRIE_HASH);
-        this.uncleCount = uncleCount;
-        this.paidFees = BigInteger.ZERO;
+        this(parentHash, unclesHash, coinbase, logsBloom, difficulty, number, gasLimit, gasUsed, timestamp, extraData,
+                null, null, null, minimumGasPrice, uncleCount);
     }
 
     public BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
@@ -212,13 +188,13 @@ public class BlockHeader implements SerializableObject {
         this.timestamp = timestamp;
         this.extraData = extraData;
         this.stateRoot = ByteUtils.clone(EMPTY_TRIE_HASH);
-        this.bitcoinMergedMiningHeader = bitcoinMergedMiningHeader;
-        this.bitcoinMergedMiningMerkleProof = bitcoinMergedMiningMerkleProof;
-        this.bitcoinMergedMiningCoinbaseTransaction = bitcoinMergedMiningCoinbaseTransaction;
         this.minimumGasPrice = minimumGasPrice;
         this.receiptTrieRoot = ByteUtils.clone(EMPTY_TRIE_HASH);
         this.uncleCount = uncleCount;
         this.paidFees = BigInteger.ZERO;
+        this.bitcoinMergedMiningHeader = bitcoinMergedMiningHeader;
+        this.bitcoinMergedMiningMerkleProof = bitcoinMergedMiningMerkleProof;
+        this.bitcoinMergedMiningCoinbaseTransaction = bitcoinMergedMiningCoinbaseTransaction;
     }
 
     @VisibleForTesting
@@ -448,7 +424,7 @@ public class BlockHeader implements SerializableObject {
         if (receiptTrieRoot == null) {
             this.receiptTrieRoot = EMPTY_TRIE_HASH;
         }
-        
+
         byte[] receiptTrieRoot = RLP.encodeElement(this.receiptTrieRoot);
 
         byte[] logsBloom = RLP.encodeElement(this.logsBloom);
@@ -480,9 +456,8 @@ public class BlockHeader implements SerializableObject {
         return RLP.encodeList(fieldToEncodeList.toArray(new byte[][]{}));
     }
 
-    // Warining: This method does not uses the object's attributes
+    // Warning: This method does not use the object's attributes
     public static byte[] getUnclesEncodedEx(List<BlockHeader> uncleList) {
-
         byte[][] unclesEncoded = new byte[uncleList.size()][];
         int i = 0;
         for (BlockHeader uncle : uncleList) {
@@ -553,15 +528,15 @@ public class BlockHeader implements SerializableObject {
     }
 
     // TODO added to comply with SerializableObject
+
     public byte[] getRawHash() {
         return getHash();
     }
-
     // TODO added to comply with SerializableObject
+
     public byte[] getEncodedRaw() {
         return getEncoded();
     }
-
     public byte[] getBitcoinMergedMiningHeader() {
         return bitcoinMergedMiningHeader;
     }
@@ -608,5 +583,9 @@ public class BlockHeader implements SerializableObject {
 
     public String getShortHash() {
         return HashUtil.shortHash(getHash());
+    }
+
+    private static BigInteger parseBigInteger(byte[] bytes) {
+        return bytes == null ? BigInteger.ZERO : BigIntegers.fromUnsignedByteArray(bytes);
     }
 }
