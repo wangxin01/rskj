@@ -27,6 +27,7 @@ import co.rsk.trie.TrieImpl;
 import org.ethereum.util.RLP;
 
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -86,7 +87,7 @@ public class BlockResult {
         //TODO Fix Trie hash for receipts - doesnt match cpp
         Trie receiptsTrie = new TrieImpl();
 
-        if (receipts == null || receipts.isEmpty()) {
+        if (receipts.isEmpty()) {
             return HashUtil.EMPTY_TRIE_HASH;
         }
 
@@ -100,10 +101,8 @@ public class BlockResult {
     private static byte[] calculateLogsBloom(List<TransactionReceipt> receipts) {
         Bloom logBloom = new Bloom();
 
-        if (receipts != null) {
-            for (TransactionReceipt receipt : receipts) {
-                logBloom.or(receipt.getBloomFilter());
-            }
+        for (TransactionReceipt receipt : receipts) {
+            logBloom.or(receipt.getBloomFilter());
         }
 
         return logBloom.getData();
@@ -111,7 +110,7 @@ public class BlockResult {
 
     private static class InterruptedExecutionBlockResult extends BlockResult {
         public InterruptedExecutionBlockResult() {
-            super(null, null, null, 0, null);
+            super(Collections.emptyList(), Collections.emptyList(), null, 0, BigInteger.ZERO);
         }
     }
 }
