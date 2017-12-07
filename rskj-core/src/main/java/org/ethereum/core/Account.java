@@ -88,10 +88,6 @@ public class Account {
         return address;
     }
 
-    public void setAddress(byte[] address) {
-        this.address = address;
-    }
-
     public Set<Transaction> getPendingTransactions() {
         return this.pendingTransactions;
     }
